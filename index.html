@@ -6,13 +6,17 @@ import { initializeApp } from "firebase/app";
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyA6HQ5oXDHk5TjjeMmH50LMLljM8EsIsyY",
-  authDomain: "caminando-7f53a.firebaseapp.com",
-  projectId: "caminando-7f53a",
-  storageBucket: "caminando-7f53a.firebasestorage.app",
-  messagingSenderId: "672440116652",
-  appId: "1:672440116652:web:82a12d6aaa3d802abdc609"
+// const firebaseConfig = {
+//  apiKey: "AIzaSyA6HQ5oXDHk5TjjeMmH50LMLljM8EsIsyY",
+//  authDomain: "caminando-7f53a.firebaseapp.com",
+//  projectId: "caminando-7f53a",
+//  storageBucket: "caminando-7f53a.firebasestorage.app",
+//   messagingSenderId: "672440116652",
+//  appId: "1:672440116652:web:82a12d6aaa3d802abdc609"
+<script type="module">
+  import { firebaseConfig } from './firebaseConfig.js';
+  firebase.initializeApp(firebaseConfig);
+</script>
 };
 
 // Initialize Firebase
