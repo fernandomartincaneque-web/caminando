@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyA6HQ5oXDHk5TjjeMmH50LMLljM8EsIsyY",
+  authDomain: "caminando-7f53a.firebaseapp.com",
+  projectId: "caminando-7f53a",
+  storageBucket: "caminando-7f53a.firebasestorage.app",
+  messagingSenderId: "672440116652",
+  appId: "1:672440116652:web:82a12d6aaa3d802abdc609"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+
+
+
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>camiNando</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; font-size: 15px; }
+  .header { background: #fff; border-bottom: 1px solid #e0e0d8; padding: 16px 20px; position: sticky; top: 0; z-index: 100; }
+  .header h1 { font-size: 18px; font-weight: 600; }
+  .header p { font-size: 13px; color: #666; margin-top: 2px; }
+  .tabs { display: flex; background: #fff; border-bottom: 1px solid #e0e0d8; }
+  .tab { flex: 1; padding: 12px; text-align: center; font-size: 13px; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; color: #888; }
+  .tab.active { color: #1a1a1a; border-bottom-color: #1a1a1a; }
+  .content { padding: 16px 20px; max-width: 600px; margin: 0 auto; }
+  .card { background: #fff; border-radius: 12px; border: 1px solid #e0e0d8; padding: 16px; margin-bottom: 12px; }
+  label { display: block; font-size: 13px; font-weight: 500; color: #555; margin-bottom: 6px; margin-top: 14px; }
+  label:first-child { margin-top: 0; }
+  input[type=text], input[type=number], select, textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px;
+    font-size: 15px; font-family: inherit; background: #fafaf8; color: #1a1a1a;
+    appearance: none;
+  }
+  input:focus, select:focus { outline: none; border-color: #888; background: #fff; }
+  .amount-wrap { position: relative; }
+  .amount-wrap input { padding-left: 28px; }
+  .amount-wrap::before { content: '€'; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888; font-size: 15px; pointer-events: none; }
+  .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-top: 8px; }
+  .person-chip { padding: 8px 10px; border: 1.5px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 13px; text-align: center; background: #fafaf8; transition: all 0.15s; user-select: none; }
+  .person-chip.selected { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .select-all-btn { font-size: 12px; color: #666; cursor: pointer; padding: 4px 8px; border: 1px solid #ddd; border-radius: 6px; background: none; margin-bottom: 8px; }
+  .btn-primary { width: 100%; padding: 13px; background: #1a1a1a; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 18px; }
+  .btn-primary:active { opacity: 0.85; }
+  .btn-secondary { padding: 8px 14px; background: none; color: #555; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  .btn-danger { padding: 8px 14px; background: none; color: #c0392b; border: 1px solid #f5c6c6; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  .expense-item { border-bottom: 1px solid #f0f0ea; padding: 12px 0; }
+  .expense-item:last-child { border-bottom: none; }
+  .exp-header { display: flex; justify-content: space-between; align-items: flex-start; }
+  .exp-desc { font-weight: 500; font-size: 15px; }
+  .exp-amount { font-weight: 600; font-size: 16px; color: #1a1a1a; white-space: nowrap; margin-left: 12px; }
+  .exp-meta { font-size: 12px; color: #888; margin-top: 4px; }
+  .exp-people { font-size: 12px; color: #555; margin-top: 6px; }
+  .exp-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .empty { text-align: center; padding: 40px 20px; color: #aaa; }
+  .empty-icon { font-size: 32px; margin-bottom: 12px; }
+  .summary-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0ea; font-size: 14px; }
+  .summary-row:last-child { border-bottom: none; }
+  .balance-pos { color: #27ae60; font-weight: 500; }
+  .balance-neg { color: #c0392b; font-weight: 500; }
+  .payment-item { padding: 12px; background: #fafaf8; border-radius: 8px; margin-bottom: 8px; font-size: 14px; border: 1px solid #ede; }
+  .payment-arrow { color: #888; margin: 0 8px; }
+  .payment-amount { font-weight: 600; float: right; }
+  .section-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #aaa; margin: 16px 0 8px; }
+  .config-section { margin-bottom: 20px; }
+  .tag { display: inline-block; background: #f0f0ea; border-radius: 4px; padding: 2px 6px; font-size: 11px; color: #666; margin: 2px; }
+  .btn-export { width: 100%; padding: 13px; background: #2d6a4f; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 8px; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: flex-end; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 16px 16px 0 0; width: 100%; max-width: 600px; padding: 20px; max-height: 90vh; overflow-y: auto; }
+  .modal-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 16px; }
+  .modal-title { font-size: 17px; font-weight: 600; margin-bottom: 16px; }
+  .notice { background: #fffbea; border: 1px solid #f0e060; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #7a6000; margin-bottom: 12px; }
+  .counter { font-size: 12px; color: #aaa; margin-bottom: 12px; }
+  .date-wrap { position: relative; }
+  .date-input-row { display: flex; gap: 8px; align-items: center; }
+  .date-input-row input[type=text] { flex: 1; }
+  .cal-btn { padding: 10px 13px; border: 1px solid #ddd; border-radius: 8px; background: #fafaf8; cursor: pointer; font-size: 16px; line-height: 1; flex-shrink: 0; color: #555; }
+  .cal-btn:active { background: #eee; }
+  .calendar-popup { display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #fff; border: 1px solid #ddd; border-radius: 12px; z-index: 999; padding: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+  .calendar-popup.open { display: block; }
+  .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .cal-nav { background: none; border: 1px solid #eee; border-radius: 6px; width: 30px; height: 30px; cursor: pointer; font-size: 15px; color: #555; display: flex; align-items: center; justify-content: center; }
+  .cal-nav:active { background: #f0f0ea; }
+  .cal-month-label { font-size: 14px; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+  .cal-month-label:hover { background: #f0f0ea; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-dow { text-align: center; font-size: 11px; font-weight: 600; color: #aaa; padding: 4px 0; }
+  .cal-day { text-align: center; font-size: 13px; padding: 7px 2px; border-radius: 6px; cursor: pointer; color: #1a1a1a; }
+  .cal-day:hover { background: #f0f0ea; }
+  .cal-day.selected { background: #1a1a1a; color: #fff; font-weight: 500; }
+  .cal-day.today { border: 1.5px solid #bbb; }
+  .cal-day.other-month { color: #ccc; }
+  .cal-day.other-month:hover { background: #f7f7f5; }
+  .cal-year-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 4px 0; }
+  .cal-year-item { text-align: center; font-size: 13px; padding: 8px 4px; border-radius: 6px; cursor: pointer; }
+  .cal-year-item:hover { background: #f0f0ea; }
+  .cal-year-item.selected { background: #1a1a1a; color: #fff; }
+  .cal-month-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 4px 0; }
+  .cal-month-item { text-align: center; font-size: 13px; padding: 10px 4px; border-radius: 6px; cursor: pointer; }
+  .cal-month-item:hover { background: #f0f0ea; }
+  .cal-month-item.selected { background: #1a1a1a; color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1 id="trip-title">Gastos del viaje</h1>
+  <p id="trip-subtitle">Toca + para añadir un gasto</p>
+</div>
+<div class="tabs">
+  <div class="tab active" onclick="showTab('gastos')">Gastos</div>
+  <div class="tab" onclick="showTab('resumen')">Resumen</div>
+  <div class="tab" onclick="showTab('config')">Configurar</div>
+</div>
+
+<div id="tab-gastos" class="content">
+  <div id="expenses-list"></div>
+  <button class="btn-primary" onclick="openModal('add')">+ Añadir gasto</button>
+</div>
+
+<div id="tab-resumen" class="content" style="display:none">
+  <div class="card">
+    <div class="section-title">Balance por persona</div>
+    <div id="balance-list"></div>
+  </div>
+  <div class="card">
+    <div class="section-title">Pagos para liquidar</div>
+    <div id="payments-list"></div>
+  </div>
+  <button class="btn-export" onclick="exportCSV()">⬇ Exportar CSV para KNIME</button>
+</div>
+
+<div id="tab-config" class="content" style="display:none">
+  <div class="config-section">
+    <div class="card">
+      <label>Nombre del viaje</label>
+      <input type="text" id="config-trip-name" placeholder="Ej: Viaje a Roma 2025" value="">
+      <label style="margin-top:14px">Viajeros (uno por línea)</label>
+      <textarea id="config-people" rows="14" style="font-size:13px; line-height:1.6" placeholder="Fernando&#10;Ana&#10;Carlos..."></textarea>
+      <button class="btn-primary" onclick="saveConfig()">Guardar configuración</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title">Datos</div>
+    <button class="btn-secondary" onclick="clearAll()" style="width:100%; margin-bottom:8px">Borrar todos los gastos</button>
+    <button class="btn-secondary" onclick="loadDemo()" style="width:100%">Cargar datos de ejemplo</button>
+  </div>
+</div>
+
+<!-- Modal añadir/editar gasto -->
+<div class="modal-overlay" id="expense-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">Nuevo gasto</div>
+    <input type="hidden" id="edit-index" value="-1">
+    <label>Descripción</label>
+    <input type="text" id="exp-desc" placeholder="Ej: Cena restaurante El Molino">
+    <label>Importe</label>
+    <div class="amount-wrap"><input type="number" id="exp-amount" placeholder="0.00" step="0.01" min="0"></div>
+    <label>Pagado por</label>
+    <select id="exp-payer"></select>
+    <label>Fecha</label>
+    <div class="date-wrap" id="date-wrap">
+      <div class="date-input-row">
+        <input type="text" id="exp-date" placeholder="DD/MM/AAAA" maxlength="10" autocomplete="off" oninput="onDateTyped(this)" onblur="onDateBlur()">
+        <button type="button" class="cal-btn" onclick="toggleCal()" title="Abrir calendario">&#128197;</button>
+      </div>
+      <div class="calendar-popup" id="cal-popup">
+        <div class="cal-header">
+          <button class="cal-nav" onclick="calNav(-1)">&#8249;</button>
+          <span class="cal-month-label" id="cal-month-label" onclick="toggleCalView()"></span>
+          <button class="cal-nav" onclick="calNav(1)">&#8250;</button>
+        </div>
+        <div id="cal-body"></div>
+      </div>
+    </div>
+    <label>Imputar a <span style="font-weight:400;color:#aaa">(quién comparte este gasto)</span></label>
+    <button class="select-all-btn" onclick="toggleAll()">Seleccionar todos</button>
+    <div class="people-grid" id="people-chips"></div>
+    <label>Notas <span style="font-weight:400;color:#aaa">(opcional)</span></label>
+    <input type="text" id="exp-notes" placeholder="Opcional">
+    <button class="btn-primary" onclick="saveExpense()">Guardar gasto</button>
+    <button class="btn-secondary" style="width:100%;margin-top:10px" onclick="closeModal()">Cancelar</button>
+  </div>
+</div>
+
+<script>
+let state = {
+  tripName: 'Mi Viaje',
+  people: [],
+  expenses: []
+};
+
+async function load() {
+  const doc = await docRef.get();
+  if (doc.exists) {
+    state = doc.data();
+  }
+}
+function save() {
+  docRef.set(state);
+}
+
+function showTab(t) {
+  ['gastos','resumen','config'].forEach(x => {
+    document.getElementById('tab-'+x).style.display = x===t ? '' : 'none';
+    document.querySelectorAll('.tab').forEach((el,i) => {
+      el.classList.toggle('active', ['gastos','resumen','config'][i]===t);
+    });
+  });
+  if (t==='resumen') renderSummary();
+  if (t==='gastos') renderExpenses();
+  if (t==='config') {
+    document.getElementById('config-trip-name').value = state.tripName;
+    document.getElementById('config-people').value = state.people.join('\n');
+  }
+}
+
+function saveConfig() {
+  state.tripName = document.getElementById('config-trip-name').value.trim() || 'Mi Viaje';
+  const raw = document.getElementById('config-people').value;
+  state.people = raw.split('\n').map(s=>s.trim()).filter(Boolean);
+  save();
+  document.getElementById('trip-title').textContent = state.tripName;
+  document.getElementById('trip-subtitle').textContent = state.people.length + ' viajeros · ' + state.expenses.length + ' gastos';
+  alert('Configuración guardada. Viajeros: ' + state.people.join(', '));
+}
+
+function openModal(mode, idx) {
+  document.getElementById('expense-modal').classList.add('open');
+  const today = new Date();
+  const dd = String(today.getDate()).padStart(2,'0');
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const yyyy = today.getFullYear();
+  if (mode === 'add') {
+    document.getElementById('modal-title').textContent = 'Nuevo gasto';
+    document.getElementById('edit-index').value = -1;
+    document.getElementById('exp-desc').value = '';
+    document.getElementById('exp-amount').value = '';
+    document.getElementById('exp-notes').value = '';
+    document.getElementById('exp-date').value = dd+'/'+mm+'/'+yyyy;
+    renderPayerSelect(null);
+    renderChips([]);
+  } else {
+    const e = state.expenses[idx];
+    document.getElementById('modal-title').textContent = 'Editar gasto';
+    document.getElementById('edit-index').value = idx;
+    document.getElementById('exp-desc').value = e.desc;
+    document.getElementById('exp-amount').value = e.amount;
+    document.getElementById('exp-notes').value = e.notes || '';
+    document.getElementById('exp-date').value = e.date || '';
+    renderPayerSelect(e.payer);
+    renderChips(e.participants);
+  }
+}
+function closeModal() { document.getElementById('expense-modal').classList.remove('open'); }
+
+function renderPayerSelect(selected) {
+  const sel = document.getElementById('exp-payer');
+  sel.innerHTML = state.people.map(p => `<option value="${p}" ${p===selected?'selected':''}>${p}</option>`).join('');
+}
+
+function renderChips(selected) {
+  const grid = document.getElementById('people-chips');
+  grid.innerHTML = state.people.map(p => `
+    <div class="person-chip ${selected.includes(p)?'selected':''}" onclick="toggleChip(this,'${p}')">${p}</div>
+  `).join('');
+}
+
+function toggleChip(el, name) { el.classList.toggle('selected'); }
+
+function toggleAll() {
+  const chips = document.querySelectorAll('#people-chips .person-chip');
+  const allSel = [...chips].every(c=>c.classList.contains('selected'));
+  chips.forEach(c => { if(allSel) c.classList.remove('selected'); else c.classList.add('selected'); });
+}
+
+function getSelectedPeople() {
+  return [...document.querySelectorAll('#people-chips .person-chip.selected')].map(c=>c.textContent);
+}
+
+function saveExpense() {
+  const desc = document.getElementById('exp-desc').value.trim();
+  const amount = parseFloat(document.getElementById('exp-amount').value);
+  const payer = document.getElementById('exp-payer').value;
+  const date = document.getElementById('exp-date').value.trim();
+  const notes = document.getElementById('exp-notes').value.trim();
+  const participants = getSelectedPeople();
+  if (!desc) { alert('Indica una descripción'); return; }
+  if (!amount || amount <= 0) { alert('Indica un importe válido'); return; }
+  if (!payer) { alert('Indica quién pagó'); return; }
+  if (participants.length === 0) { alert('Selecciona al menos una persona'); return; }
+  const expense = { desc, amount, payer, date, notes, participants, id: Date.now() };
+  const idx = parseInt(document.getElementById('edit-index').value);
+  if (idx >= 0) state.expenses[idx] = expense;
+  else state.expenses.push(expense);
+  save();
+  closeModal();
+  renderExpenses();
+  document.getElementById('trip-subtitle').textContent = state.people.length + ' viajeros · ' + state.expenses.length + ' gastos';
+}
+
+function deleteExpense(idx) {
+  if (!confirm('¿Eliminar este gasto?')) return;
+  state.expenses.splice(idx, 1);
+  save();
+  renderExpenses();
+}
+
+function renderExpenses() {
+  const list = document.getElementById('expenses-list');
+  if (state.expenses.length === 0) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">🧾</div><p>No hay gastos todavía.<br>Toca "+ Añadir gasto" para empezar.</p></div>';
+    return;
+  }
+  const total = state.expenses.reduce((s,e)=>s+e.amount,0);
+  list.innerHTML = `<div class="counter">${state.expenses.length} gastos · Total: ${fmt(total)}</div>` +
+    '<div class="card">' +
+    state.expenses.map((e,i) => `
+      <div class="expense-item">
+        <div class="exp-header">
+          <div class="exp-desc">${e.desc}</div>
+          <div class="exp-amount">${fmt(e.amount)}</div>
+        </div>
+        <div class="exp-meta">Pagado por <strong>${e.payer}</strong>${e.date ? ' · '+e.date : ''}</div>
+        <div class="exp-people">${e.participants.map(p=>`<span class="tag">${p}</span>`).join('')}</div>
+        ${e.notes ? `<div style="font-size:12px;color:#aaa;margin-top:4px">${e.notes}</div>` : ''}
+        <div class="exp-actions">
+          <button class="btn-secondary" onclick="openModal('edit',${i})">Editar</button>
+          <button class="btn-danger" onclick="deleteExpense(${i})">Eliminar</button>
+        </div>
+      </div>
+    `).join('') + '</div>';
+}
+
+function fmt(n) { return n.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €'; }
+
+function calcBalances() {
+  const paid = {}, owed = {};
+  state.people.forEach(p => { paid[p] = 0; owed[p] = 0; });
+  state.expenses.forEach(e => {
+    const share = e.amount / e.participants.length;
+    paid[e.payer] = (paid[e.payer]||0) + e.amount;
+    e.participants.forEach(p => { owed[p] = (owed[p]||0) + share; });
+  });
+  const balances = {};
+  state.people.forEach(p => { balances[p] = (paid[p]||0) - (owed[p]||0); });
+  return balances;
+}
+
+function minCashFlow(balances) {
+  const debtors = [], creditors = [];
+  Object.entries(balances).forEach(([p,b]) => {
+    if (b < -0.005) debtors.push({name:p, amt:-b});
+    else if (b > 0.005) creditors.push({name:p, amt:b});
+  });
+  const payments = [];
+  let i=0, j=0;
+  while (i < debtors.length && j < creditors.length) {
+    const d = debtors[i], c = creditors[j];
+    const amt = Math.min(d.amt, c.amt);
+    payments.push({from:d.name, to:c.name, amount:amt});
+    d.amt -= amt; c.amt -= amt;
+    if (d.amt < 0.005) i++;
+    if (c.amt < 0.005) j++;
+  }
+  return payments;
+}
+
+function renderSummary() {
+  const balances = calcBalances();
+  const payments = minCashFlow(balances);
+  const total = state.expenses.reduce((s,e)=>s+e.amount,0);
+  const bList = document.getElementById('balance-list');
+  const entries = Object.entries(balances).sort((a,b)=>b[1]-a[1]);
+  bList.innerHTML = `<div class="summary-row"><span style="color:#aaa">Total gastos</span><span style="font-weight:600">${fmt(total)}</span></div>` +
+    entries.map(([p,b]) => `
+      <div class="summary-row">
+        <span>${p}</span>
+        <span class="${b>0.005?'balance-pos':b<-0.005?'balance-neg':''}">${b>0.005?'+':''}${fmt(b)}</span>
+      </div>
+    `).join('');
+  const pList = document.getElementById('payments-list');
+  if (payments.length === 0) {
+    pList.innerHTML = '<p style="color:#aaa;font-size:14px;text-align:center;padding:12px">Nadie debe nada o aún no hay gastos.</p>';
+  } else {
+    pList.innerHTML = payments.map(p => `
+      <div class="payment-item">
+        <strong>${p.from}</strong><span class="payment-arrow">→</span><strong>${p.to}</strong>
+        <span class="payment-amount">${fmt(p.amount)}</span>
+      </div>
+    `).join('');
+  }
+}
+
+function exportCSV() {
+  const rows = [['ID','Fecha','Descripcion','Importe_EUR','Pagador','Participantes','Num_Participantes','Cuota_por_persona','Notas']];
+  state.expenses.forEach((e,i) => {
+    const share = (e.amount / e.participants.length).toFixed(2);
+    rows.push([
+      i+1, e.date||'', '"'+e.desc.replace(/"/g,'""')+'"', e.amount.toFixed(2),
+      e.payer, '"'+e.participants.join(';')+'"', e.participants.length, share, '"'+(e.notes||'').replace(/"/g,'""')+'"'
+    ]);
+  });
+  rows.push([]);
+  rows.push(['--- BALANCES ---']);
+  rows.push(['Persona','Pagado_total','Cuota_imputada','Balance_neto']);
+  const paid = {}, owed = {};
+  state.people.forEach(p => { paid[p]=0; owed[p]=0; });
+  state.expenses.forEach(e => {
+    paid[e.payer]=(paid[e.payer]||0)+e.amount;
+    const share=e.amount/e.participants.length;
+    e.participants.forEach(p => { owed[p]=(owed[p]||0)+share; });
+  });
+  state.people.forEach(p => {
+    rows.push([p,(paid[p]||0).toFixed(2),(owed[p]||0).toFixed(2),((paid[p]||0)-(owed[p]||0)).toFixed(2)]);
+  });
+  rows.push([]);
+  rows.push(['--- PAGOS LIQUIDACION ---']);
+  rows.push(['De','A','Importe_EUR']);
+  minCashFlow(calcBalances()).forEach(p => rows.push([p.from,p.to,p.amount.toFixed(2)]));
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const bom = '\uFEFF';
+  const blob = new Blob([bom+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = state.tripName.replace(/\s+/g,'_')+'_gastos.csv';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function clearAll() {
+  if (!confirm('¿Borrar todos los gastos? Esta acción no se puede deshacer.')) return;
+  state.expenses = []; save(); renderExpenses();
+}
+
+function loadDemo() {
+  if (state.people.length === 0) {
+    state.people = ['Fernando','Ana','Carlos','Marta','Pedro','Lucia','Jordi','Sofia','Roberto','Laura','Pau','Elena','Toni','Neus'];
+    state.tripName = 'Viaje de Ejemplo';
+  }
+  const p = state.people;
+  state.expenses = [
+    {id:1, desc:'Alquiler coche', amount:320, payer:p[0], date:'15/03/2025', participants:[p[0],p[1],p[2],p[3]], notes:'Coche grande 4 plazas'},
+    {id:2, desc:'Cena bienvenida', amount:196, payer:p[1], date:'15/03/2025', participants:state.people, notes:''},
+    {id:3, desc:'Entrada museo', amount:84, payer:p[2], date:'16/03/2025', participants:[p[0],p[1],p[2],p[3],p[4],p[5]], notes:''},
+    {id:4, desc:'Picnic playa', amount:55, payer:p[4], date:'17/03/2025', participants:[p[4],p[5],p[6],p[7],p[8]], notes:'Bebidas y bocadillos'},
+    {id:5, desc:'Hotel noche 1', amount:840, payer:p[0], date:'15/03/2025', participants:state.people, notes:'14 personas'},
+    {id:6, desc:'Gasolina', amount:63, payer:p[3], date:'16/03/2025', participants:[p[0],p[1],p[2],p[3]], notes:''},
+  ];
+  save();
+  document.getElementById('trip-title').textContent = state.tripName;
+  document.getElementById('trip-subtitle').textContent = p.length + ' viajeros · ' + state.expenses.length + ' gastos';
+  showTab('gastos');
+}
+
+document.getElementById('expense-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+docRef.onSnapshot((doc) => {
+  if (doc.exists) {
+    state = doc.data();
+    renderExpenses();
+    document.getElementById('trip-title').textContent = state.tripName;
+    if (state.people.length > 0) {
+      document.getElementById('trip-subtitle').textContent =
+        state.people.length + ' viajeros · ' + state.expenses.length + ' gastos';
+    }
+  } else {
+    save(); // crea el documento inicial
+  }
+});
+
+
+document.getElementById('trip-title').textContent = state.tripName;
+if (state.people.length > 0) {
+  document.getElementById('trip-subtitle').textContent = state.people.length + ' viajeros · ' + state.expenses.length + ' gastos';
+}
+</script>
+</body>
+</html>
