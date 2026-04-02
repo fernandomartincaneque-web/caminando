@@ -1,35 +1,9 @@
 <!DOCTYPE html>
-
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// const firebaseConfig = {
-//  apiKey: "AIzaSyA6HQ5oXDHk5TjjeMmH50LMLljM8EsIsyY",
-//  authDomain: "caminando-7f53a.firebaseapp.com",
-//  projectId: "caminando-7f53a",
-//  storageBucket: "caminando-7f53a.firebasestorage.app",
-//   messagingSenderId: "672440116652",
-//  appId: "1:672440116652:web:82a12d6aaa3d802abdc609"
-<script type="module">
-  import { firebaseConfig } from './firebaseConfig.js';
-  firebase.initializeApp(firebaseConfig);
-</script>
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
-
-
-
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>camiNando</title>
+<title>Gastos del Viaje</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; font-size: 15px; }
@@ -117,6 +91,10 @@ const app = initializeApp(firebaseConfig);
   .cal-month-item:hover { background: #f0f0ea; }
   .cal-month-item.selected { background: #1a1a1a; color: #fff; }
 </style>
+
+<script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-database-compat.js"></script>
+
 </head>
 <body>
 
@@ -174,8 +152,9 @@ const app = initializeApp(firebaseConfig);
     <input type="text" id="exp-desc" placeholder="Ej: Cena restaurante El Molino">
     <label>Importe</label>
     <div class="amount-wrap"><input type="number" id="exp-amount" placeholder="0.00" step="0.01" min="0"></div>
-    <label>Pagado por</label>
-    <select id="exp-payer"></select>
+    <label>Pagado por <span style="color:#c0392b">*</span></label>
+    <select id="exp-payer" onchange="document.getElementById('payer-error').style.display='none'"></select>
+    <div id="payer-error" style="display:none;font-size:12px;color:#c0392b;margin-top:4px">Selecciona quién pagó este gasto.</div>
     <label>Fecha</label>
     <div class="date-wrap" id="date-wrap">
       <div class="date-input-row">
@@ -191,8 +170,12 @@ const app = initializeApp(firebaseConfig);
         <div id="cal-body"></div>
       </div>
     </div>
-    <label>Imputar a <span style="font-weight:400;color:#aaa">(quién comparte este gasto)</span></label>
-    <button class="select-all-btn" onclick="toggleAll()">Seleccionar todos</button>
+    <label>Imputar a <span style="font-weight:400;color:#aaa">(quién comparte este gasto)</span> <span style="color:#c0392b">*</span></label>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button class="select-all-btn" onclick="selectAllChips()">&#10003; Todos</button>
+      <button class="select-all-btn" onclick="selectNoneChips()">&#10005; Ninguno</button>
+    </div>
+    <div id="chips-error" style="display:none;font-size:12px;color:#c0392b;margin-bottom:6px">Selecciona al menos un viajero.</div>
     <div class="people-grid" id="people-chips"></div>
     <label>Notas <span style="font-weight:400;color:#aaa">(opcional)</span></label>
     <input type="text" id="exp-notes" placeholder="Opcional">
@@ -202,21 +185,54 @@ const app = initializeApp(firebaseConfig);
 </div>
 
 <script>
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyA6HQ5oXDHk5TjjeMmH50LMLljM8EsIsyY",
+  authDomain: "caminando-7f53a.firebaseapp.com",
+  projectId: "caminando-7f53a",
+  storageBucket: "caminando-7f53a.firebasestorage.app",
+  messagingSenderId: "672440116652",
+  appId: "1:672440116652:web:82a12d6aaa3d802abdc609"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+
 let state = {
   tripName: 'Mi Viaje',
   people: [],
   expenses: []
 };
 
-async function load() {
-  const doc = await docRef.get();
-  if (doc.exists) {
-    state = doc.data();
-  }
+// Escucha cambios en tiempo real desde cualquier móvil
+function load() {
+  db.ref('viaje_data').on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      state = data;
+      // Actualizamos la interfaz cada vez que alguien cambia algo
+      renderExpenses();
+      document.getElementById('trip-title').textContent = state.tripName;
+      document.getElementById('trip-subtitle').textContent = 
+        state.people.length + ' viajeros · ' + state.expenses.length + ' gastos';
+    }
+  });
 }
+
+// Guarda los datos en la nube
 function save() {
-  docRef.set(state);
+  db.ref('viaje_data').set(state);
 }
+
+
+
 
 function showTab(t) {
   ['gastos','resumen','config'].forEach(x => {
@@ -270,11 +286,16 @@ function openModal(mode, idx) {
     renderChips(e.participants);
   }
 }
-function closeModal() { document.getElementById('expense-modal').classList.remove('open'); }
+function closeModal() {
+  document.getElementById('expense-modal').classList.remove('open');
+  document.getElementById('payer-error').style.display = 'none';
+  document.getElementById('chips-error').style.display = 'none';
+}
 
 function renderPayerSelect(selected) {
   const sel = document.getElementById('exp-payer');
-  sel.innerHTML = state.people.map(p => `<option value="${p}" ${p===selected?'selected':''}>${p}</option>`).join('');
+  const emptyOpt = selected ? '' : '<option value="" disabled selected>— Selecciona pagador —</option>';
+  sel.innerHTML = emptyOpt + state.people.map(p => `<option value="${p}" ${p===selected?'selected':''}>${p}</option>`).join('');
 }
 
 function renderChips(selected) {
@@ -284,12 +305,19 @@ function renderChips(selected) {
   `).join('');
 }
 
-function toggleChip(el, name) { el.classList.toggle('selected'); }
+function toggleChip(el, name) {
+  el.classList.toggle('selected');
+  if (document.querySelectorAll('#people-chips .person-chip.selected').length > 0) {
+    document.getElementById('chips-error').style.display = 'none';
+  }
+}
 
-function toggleAll() {
-  const chips = document.querySelectorAll('#people-chips .person-chip');
-  const allSel = [...chips].every(c=>c.classList.contains('selected'));
-  chips.forEach(c => { if(allSel) c.classList.remove('selected'); else c.classList.add('selected'); });
+function selectAllChips() {
+  document.querySelectorAll('#people-chips .person-chip').forEach(c => c.classList.add('selected'));
+  document.getElementById('chips-error').style.display = 'none';
+}
+function selectNoneChips() {
+  document.querySelectorAll('#people-chips .person-chip').forEach(c => c.classList.remove('selected'));
 }
 
 function getSelectedPeople() {
@@ -303,10 +331,23 @@ function saveExpense() {
   const date = document.getElementById('exp-date').value.trim();
   const notes = document.getElementById('exp-notes').value.trim();
   const participants = getSelectedPeople();
-  if (!desc) { alert('Indica una descripción'); return; }
+  let valid = true;
+  if (!desc) { alert('Indica una descripción del gasto'); return; }
   if (!amount || amount <= 0) { alert('Indica un importe válido'); return; }
-  if (!payer) { alert('Indica quién pagó'); return; }
-  if (participants.length === 0) { alert('Selecciona al menos una persona'); return; }
+  if (!payer) {
+    document.getElementById('payer-error').style.display = 'block';
+    document.getElementById('exp-payer').focus();
+    valid = false;
+  } else {
+    document.getElementById('payer-error').style.display = 'none';
+  }
+  if (participants.length === 0) {
+    document.getElementById('chips-error').style.display = 'block';
+    valid = false;
+  } else {
+    document.getElementById('chips-error').style.display = 'none';
+  }
+  if (!valid) return;
   const expense = { desc, amount, payer, date, notes, participants, id: Date.now() };
   const idx = parseInt(document.getElementById('edit-index').value);
   if (idx >= 0) state.expenses[idx] = expense;
@@ -474,21 +515,8 @@ document.getElementById('expense-modal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
-docRef.onSnapshot((doc) => {
-  if (doc.exists) {
-    state = doc.data();
-    renderExpenses();
-    document.getElementById('trip-title').textContent = state.tripName;
-    if (state.people.length > 0) {
-      document.getElementById('trip-subtitle').textContent =
-        state.people.length + ' viajeros · ' + state.expenses.length + ' gastos';
-    }
-  } else {
-    save(); // crea el documento inicial
-  }
-});
-
-
+load();
+renderExpenses();
 document.getElementById('trip-title').textContent = state.tripName;
 if (state.people.length > 0) {
   document.getElementById('trip-subtitle').textContent = state.people.length + ' viajeros · ' + state.expenses.length + ' gastos';
