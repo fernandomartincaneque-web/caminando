@@ -20,16 +20,18 @@
   input[type=text], input[type=number], select, textarea {
     width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px;
     font-size: 15px; font-family: inherit; background: #fafaf8; color: #1a1a1a;
-    appearance: none;
+    appearance: none; -webkit-appearance: none;
   }
   input:focus, select:focus { outline: none; border-color: #888; background: #fff; }
   .amount-wrap { position: relative; }
   .amount-wrap input { padding-left: 28px; }
   .amount-wrap::before { content: '€'; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888; font-size: 15px; pointer-events: none; }
   .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-top: 8px; }
-  .person-chip { padding: 8px 10px; border: 1.5px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 13px; text-align: center; background: #fafaf8; transition: all 0.15s; user-select: none; }
+  .person-chip { padding: 8px 10px; border: 1.5px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 13px; text-align: center; background: #fafaf8; transition: all 0.15s; user-select: none; -webkit-user-select: none; }
   .person-chip.selected { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
-  .select-all-btn { font-size: 12px; color: #666; cursor: pointer; padding: 4px 8px; border: 1px solid #ddd; border-radius: 6px; background: none; margin-bottom: 8px; }
+  .chip-action-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .chip-btn { font-size: 12px; color: #555; cursor: pointer; padding: 5px 12px; border: 1px solid #ddd; border-radius: 6px; background: #fafaf8; }
+  .chip-btn:active { background: #eee; }
   .btn-primary { width: 100%; padding: 13px; background: #1a1a1a; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 18px; }
   .btn-primary:active { opacity: 0.85; }
   .btn-secondary { padding: 8px 14px; background: none; color: #555; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; cursor: pointer; }
@@ -60,349 +62,448 @@
   .modal { background: #fff; border-radius: 16px 16px 0 0; width: 100%; max-width: 600px; padding: 20px; max-height: 90vh; overflow-y: auto; }
   .modal-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 16px; }
   .modal-title { font-size: 17px; font-weight: 600; margin-bottom: 16px; }
-  .notice { background: #fffbea; border: 1px solid #f0e060; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #7a6000; margin-bottom: 12px; }
   .counter { font-size: 12px; color: #aaa; margin-bottom: 12px; }
+  .field-error { display: none; font-size: 12px; color: #c0392b; margin-top: 4px; margin-bottom: 2px; }
+
+  /* ── Datepicker ── */
   .date-wrap { position: relative; }
   .date-input-row { display: flex; gap: 8px; align-items: center; }
   .date-input-row input[type=text] { flex: 1; }
-  .cal-btn { padding: 10px 13px; border: 1px solid #ddd; border-radius: 8px; background: #fafaf8; cursor: pointer; font-size: 16px; line-height: 1; flex-shrink: 0; color: #555; }
+  .cal-btn { padding: 9px 13px; border: 1px solid #ddd; border-radius: 8px; background: #fafaf8; cursor: pointer; font-size: 17px; line-height: 1; flex-shrink: 0; color: #555; }
   .cal-btn:active { background: #eee; }
-  .calendar-popup { display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #fff; border: 1px solid #ddd; border-radius: 12px; z-index: 999; padding: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+  .calendar-popup {
+    display: none; position: fixed; background: #fff;
+    border: 1px solid #ccc; border-radius: 12px; z-index: 9999;
+    padding: 14px; width: 300px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  }
   .calendar-popup.open { display: block; }
   .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-  .cal-nav { background: none; border: 1px solid #eee; border-radius: 6px; width: 30px; height: 30px; cursor: pointer; font-size: 15px; color: #555; display: flex; align-items: center; justify-content: center; }
+  .cal-nav { background: none; border: 1px solid #eee; border-radius: 6px; width: 32px; height: 32px; cursor: pointer; font-size: 18px; color: #555; display: flex; align-items: center; justify-content: center; line-height: 1; }
   .cal-nav:active { background: #f0f0ea; }
-  .cal-month-label { font-size: 14px; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+  .cal-month-label { font-size: 14px; font-weight: 600; cursor: pointer; padding: 4px 10px; border-radius: 6px; color: #1a1a1a; }
   .cal-month-label:hover { background: #f0f0ea; }
   .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
   .cal-dow { text-align: center; font-size: 11px; font-weight: 600; color: #aaa; padding: 4px 0; }
   .cal-day { text-align: center; font-size: 13px; padding: 7px 2px; border-radius: 6px; cursor: pointer; color: #1a1a1a; }
   .cal-day:hover { background: #f0f0ea; }
-  .cal-day.selected { background: #1a1a1a; color: #fff; font-weight: 500; }
+  .cal-day.selected { background: #1a1a1a; color: #fff; font-weight: 600; }
   .cal-day.today { border: 1.5px solid #bbb; }
   .cal-day.other-month { color: #ccc; }
-  .cal-day.other-month:hover { background: #f7f7f5; }
-  .cal-year-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 4px 0; }
-  .cal-year-item { text-align: center; font-size: 13px; padding: 8px 4px; border-radius: 6px; cursor: pointer; }
+  .cal-year-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .cal-year-item { text-align: center; font-size: 13px; padding: 8px 4px; border-radius: 6px; cursor: pointer; color: #1a1a1a; }
   .cal-year-item:hover { background: #f0f0ea; }
   .cal-year-item.selected { background: #1a1a1a; color: #fff; }
-  .cal-month-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 4px 0; }
-  .cal-month-item { text-align: center; font-size: 13px; padding: 10px 4px; border-radius: 6px; cursor: pointer; }
+  .cal-month-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .cal-month-item { text-align: center; font-size: 13px; padding: 10px 4px; border-radius: 6px; cursor: pointer; color: #1a1a1a; }
   .cal-month-item:hover { background: #f0f0ea; }
   .cal-month-item.selected { background: #1a1a1a; color: #fff; }
+
+  /* ── Firebase status banner ── */
+  #fb-status { font-size: 12px; padding: 6px 12px; border-radius: 6px; margin: 8px 20px; text-align: center; display: none; }
+  #fb-status.ok  { background: #e6f4ea; color: #256029; display: block; }
+  #fb-status.err { background: #fdecea; color: #a61c00; display: block; }
 </style>
 
-<script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-database-compat.js"></script>
+<!-- Firebase compat SDK (no necesita módulos ES, funciona directamente en el navegador) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<!-- Configuración Firebase separada — importada como script clásico -->
+<script>
+window.firebaseConfig = {
+  apiKey: "AIzaSyA6HQ5oXDHk5TjjeMmH50LMLljM8EsIsyY",
+  authDomain: "caminando-7f53a.firebaseapp.com",
+  databaseURL: "https://caminando-7f53a-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "caminando-7f53a",
+  storageBucket: "caminando-7f53a.firebasestorage.app",
+  messagingSenderId: "672440116652",
+  appId: "1:672440116652:web:82a12d6aaa3d802abdc609"
+};
+</script>
 
 </head>
 <body>
 
 <div class="header">
   <h1 id="trip-title">Gastos del viaje</h1>
-  <p id="trip-subtitle">Toca + para añadir un gasto</p>
+  <p id="trip-subtitle">Cargando...</p>
 </div>
+<div id="fb-status"></div>
 <div class="tabs">
   <div class="tab active" onclick="showTab('gastos')">Gastos</div>
   <div class="tab" onclick="showTab('resumen')">Resumen</div>
   <div class="tab" onclick="showTab('config')">Configurar</div>
 </div>
 
+<!-- ── TAB GASTOS ── -->
 <div id="tab-gastos" class="content">
   <div id="expenses-list"></div>
   <button class="btn-primary" onclick="openModal('add')">+ Añadir gasto</button>
 </div>
 
+<!-- ── TAB RESUMEN ── -->
 <div id="tab-resumen" class="content" style="display:none">
   <div class="card">
     <div class="section-title">Balance por persona</div>
     <div id="balance-list"></div>
   </div>
   <div class="card">
-    <div class="section-title">Pagos para liquidar</div>
+    <div class="section-title">Pagos mínimos para liquidar</div>
     <div id="payments-list"></div>
   </div>
-  <button class="btn-export" onclick="exportCSV()">⬇ Exportar CSV para KNIME</button>
+  <button class="btn-export" onclick="exportCSV()">&#11015; Exportar CSV para KNIME</button>
 </div>
 
+<!-- ── TAB CONFIG ── -->
 <div id="tab-config" class="content" style="display:none">
   <div class="config-section">
     <div class="card">
       <label>Nombre del viaje</label>
-      <input type="text" id="config-trip-name" placeholder="Ej: Viaje a Roma 2025" value="">
+      <input type="text" id="config-trip-name" placeholder="Ej: Viaje a Roma 2025">
       <label style="margin-top:14px">Viajeros (uno por línea)</label>
-      <textarea id="config-people" rows="14" style="font-size:13px; line-height:1.6" placeholder="Fernando&#10;Ana&#10;Carlos..."></textarea>
+      <textarea id="config-people" rows="14" style="font-size:13px;line-height:1.7"
+        placeholder="Fernando&#10;Ana&#10;Carlos&#10;..."></textarea>
       <button class="btn-primary" onclick="saveConfig()">Guardar configuración</button>
     </div>
   </div>
   <div class="card">
     <div class="section-title">Datos</div>
-    <button class="btn-secondary" onclick="clearAll()" style="width:100%; margin-bottom:8px">Borrar todos los gastos</button>
+    <button class="btn-secondary" onclick="clearAll()" style="width:100%;margin-bottom:8px">Borrar todos los gastos</button>
     <button class="btn-secondary" onclick="loadDemo()" style="width:100%">Cargar datos de ejemplo</button>
   </div>
 </div>
 
-<!-- Modal añadir/editar gasto -->
+<!-- ── MODAL GASTO ── -->
 <div class="modal-overlay" id="expense-modal">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title" id="modal-title">Nuevo gasto</div>
     <input type="hidden" id="edit-index" value="-1">
+
     <label>Descripción</label>
     <input type="text" id="exp-desc" placeholder="Ej: Cena restaurante El Molino">
+
     <label>Importe</label>
-    <div class="amount-wrap"><input type="number" id="exp-amount" placeholder="0.00" step="0.01" min="0"></div>
+    <div class="amount-wrap">
+      <input type="number" id="exp-amount" placeholder="0.00" step="0.01" min="0">
+    </div>
+
     <label>Pagado por <span style="color:#c0392b">*</span></label>
-    <select id="exp-payer" onchange="document.getElementById('payer-error').style.display='none'"></select>
-    <div id="payer-error" style="display:none;font-size:12px;color:#c0392b;margin-top:4px">Selecciona quién pagó este gasto.</div>
+    <select id="exp-payer" onchange="clearError('payer-error')"></select>
+    <div class="field-error" id="payer-error">Selecciona quién pagó este gasto.</div>
+
     <label>Fecha</label>
-    <div class="date-wrap" id="date-wrap">
+    <div class="date-wrap">
       <div class="date-input-row">
-        <input type="text" id="exp-date" placeholder="DD/MM/AAAA" maxlength="10" autocomplete="off" oninput="onDateTyped(this)" onblur="onDateBlur()">
-        <button type="button" class="cal-btn" onclick="toggleCal()" title="Abrir calendario">&#128197;</button>
+        <input type="text" id="exp-date" placeholder="DD/MM/AAAA" maxlength="10"
+               autocomplete="off" oninput="onDateTyped(this)">
+        <button type="button" class="cal-btn" id="cal-toggle-btn"
+                onclick="toggleCal(event)" title="Abrir calendario">&#128197;</button>
       </div>
+      <!-- El popup se posiciona con JS vía fixed, no con absolute -->
       <div class="calendar-popup" id="cal-popup">
         <div class="cal-header">
-          <button class="cal-nav" onclick="calNav(-1)">&#8249;</button>
-          <span class="cal-month-label" id="cal-month-label" onclick="toggleCalView()"></span>
-          <button class="cal-nav" onclick="calNav(1)">&#8250;</button>
+          <button class="cal-nav" onclick="calNav(event,-1)">&#8249;</button>
+          <span class="cal-month-label" id="cal-month-label" onclick="toggleCalView(event)"></span>
+          <button class="cal-nav" onclick="calNav(event,1)">&#8250;</button>
         </div>
         <div id="cal-body"></div>
       </div>
     </div>
+
     <label>Imputar a <span style="font-weight:400;color:#aaa">(quién comparte este gasto)</span> <span style="color:#c0392b">*</span></label>
-    <div style="display:flex;gap:8px;margin-bottom:8px">
-      <button class="select-all-btn" onclick="selectAllChips()">&#10003; Todos</button>
-      <button class="select-all-btn" onclick="selectNoneChips()">&#10005; Ninguno</button>
+    <div class="chip-action-row">
+      <button class="chip-btn" onclick="selectAllChips()">&#10003; Todos</button>
+      <button class="chip-btn" onclick="selectNoneChips()">&#10005; Borrar</button>
     </div>
-    <div id="chips-error" style="display:none;font-size:12px;color:#c0392b;margin-bottom:6px">Selecciona al menos un viajero.</div>
+    <div class="field-error" id="chips-error">Selecciona al menos un viajero.</div>
     <div class="people-grid" id="people-chips"></div>
+
     <label>Notas <span style="font-weight:400;color:#aaa">(opcional)</span></label>
     <input type="text" id="exp-notes" placeholder="Opcional">
+
     <button class="btn-primary" onclick="saveExpense()">Guardar gasto</button>
     <button class="btn-secondary" style="width:100%;margin-top:10px" onclick="closeModal()">Cancelar</button>
   </div>
 </div>
 
 <script>
+// ─────────────────────────────────────────────
+//  FIREBASE — usa la variable global firebaseConfig
+//  definida en firebaseConfig.js (mismo directorio)
+// ─────────────────────────────────────────────
+let db;
+try {
+  firebase.initializeApp(window.firebaseConfig);
+  db = firebase.database();
+  setStatus('ok', '&#9729; Conectado a Firebase');
+} catch(e) {
+  setStatus('err', '&#9888; Sin conexión Firebase — usando almacenamiento local');
+}
 
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+function setStatus(type, msg) {
+  const el = document.getElementById('fb-status');
+  el.className = type;
+  el.innerHTML = msg;
+  if (type === 'ok') setTimeout(() => el.style.display='none', 3000);
+}
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyA6HQ5oXDHk5TjjeMmH50LMLljM8EsIsyY",
-  authDomain: "caminando-7f53a.firebaseapp.com",
-  projectId: "caminando-7f53a",
-  storageBucket: "caminando-7f53a.firebasestorage.app",
-  messagingSenderId: "672440116652",
-  appId: "1:672440116652:web:82a12d6aaa3d802abdc609"
-};
+// ─────────────────────────────────────────────
+//  ESTADO
+// ─────────────────────────────────────────────
+let state = { tripName: 'Mi Viaje', people: [], expenses: [] };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
-
-let state = {
-  tripName: 'Mi Viaje',
-  people: [],
-  expenses: []
-};
-
-// Escucha cambios en tiempo real desde cualquier móvil
 function load() {
-  db.ref('viaje_data').on('value', (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-      state = data;
-      // Actualizamos la interfaz cada vez que alguien cambia algo
+  if (db) {
+    db.ref('viaje_data').on('value', snapshot => {
+      const data = snapshot.val();
+      if (data) {
+        state = data;
+        if (!state.expenses) state.expenses = [];
+        if (!state.people)   state.people   = [];
+      }
       renderExpenses();
-      document.getElementById('trip-title').textContent = state.tripName;
-      document.getElementById('trip-subtitle').textContent = 
+      document.getElementById('trip-title').textContent = state.tripName || 'Mi Viaje';
+      document.getElementById('trip-subtitle').textContent =
         state.people.length + ' viajeros · ' + state.expenses.length + ' gastos';
-    }
-  });
-}
-
-// Guarda los datos en la nube
-function save() {
-  db.ref('viaje_data').set(state);
-}
-
-
-
-
-function showTab(t) {
-  ['gastos','resumen','config'].forEach(x => {
-    document.getElementById('tab-'+x).style.display = x===t ? '' : 'none';
-    document.querySelectorAll('.tab').forEach((el,i) => {
-      el.classList.toggle('active', ['gastos','resumen','config'][i]===t);
     });
-  });
-  if (t==='resumen') renderSummary();
-  if (t==='gastos') renderExpenses();
-  if (t==='config') {
-    document.getElementById('config-trip-name').value = state.tripName;
-    document.getElementById('config-people').value = state.people.join('\n');
+  } else {
+    const saved = localStorage.getItem('travel_expenses_app');
+    if (saved) { try { state = JSON.parse(saved); } catch(e) {} }
+    renderExpenses();
+    document.getElementById('trip-title').textContent = state.tripName || 'Mi Viaje';
+    document.getElementById('trip-subtitle').textContent =
+      state.people.length + ' viajeros · ' + state.expenses.length + ' gastos';
   }
 }
 
+function save() {
+  if (db) {
+    db.ref('viaje_data').set(state);
+  } else {
+    localStorage.setItem('travel_expenses_app', JSON.stringify(state));
+  }
+}
+
+// ─────────────────────────────────────────────
+//  NAVEGACIÓN TABS
+// ─────────────────────────────────────────────
+function showTab(t) {
+  ['gastos','resumen','config'].forEach((x,i) => {
+    document.getElementById('tab-'+x).style.display = x===t ? '' : 'none';
+    document.querySelectorAll('.tab')[i].classList.toggle('active', x===t);
+  });
+  if (t==='resumen') renderSummary();
+  if (t==='gastos')  renderExpenses();
+  if (t==='config') {
+    document.getElementById('config-trip-name').value = state.tripName || '';
+    document.getElementById('config-people').value = (state.people||[]).join('\n');
+  }
+}
+
+// ─────────────────────────────────────────────
+//  CONFIG
+// ─────────────────────────────────────────────
 function saveConfig() {
   state.tripName = document.getElementById('config-trip-name').value.trim() || 'Mi Viaje';
   const raw = document.getElementById('config-people').value;
   state.people = raw.split('\n').map(s=>s.trim()).filter(Boolean);
   save();
   document.getElementById('trip-title').textContent = state.tripName;
-  document.getElementById('trip-subtitle').textContent = state.people.length + ' viajeros · ' + state.expenses.length + ' gastos';
-  alert('Configuración guardada. Viajeros: ' + state.people.join(', '));
+  document.getElementById('trip-subtitle').textContent =
+    state.people.length + ' viajeros · ' + (state.expenses||[]).length + ' gastos';
+  alert('Configuración guardada.\nViajeros: ' + state.people.join(', '));
 }
 
+// ─────────────────────────────────────────────
+//  MODAL GASTO — ABRIR / CERRAR
+// ─────────────────────────────────────────────
 function openModal(mode, idx) {
+  closeCal();
   document.getElementById('expense-modal').classList.add('open');
   const today = new Date();
-  const dd = String(today.getDate()).padStart(2,'0');
-  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const dd   = String(today.getDate()).padStart(2,'0');
+  const mm   = String(today.getMonth()+1).padStart(2,'0');
   const yyyy = today.getFullYear();
+
   if (mode === 'add') {
     document.getElementById('modal-title').textContent = 'Nuevo gasto';
     document.getElementById('edit-index').value = -1;
-    document.getElementById('exp-desc').value = '';
+    document.getElementById('exp-desc').value   = '';
     document.getElementById('exp-amount').value = '';
-    document.getElementById('exp-notes').value = '';
-    document.getElementById('exp-date').value = dd+'/'+mm+'/'+yyyy;
+    document.getElementById('exp-notes').value  = '';
+    document.getElementById('exp-date').value   = dd+'/'+mm+'/'+yyyy;
+    calState.day = today.getDate();
+    calState.month = today.getMonth();
+    calState.year  = yyyy;
     renderPayerSelect(null);
     renderChips([]);
   } else {
     const e = state.expenses[idx];
     document.getElementById('modal-title').textContent = 'Editar gasto';
     document.getElementById('edit-index').value = idx;
-    document.getElementById('exp-desc').value = e.desc;
+    document.getElementById('exp-desc').value   = e.desc;
     document.getElementById('exp-amount').value = e.amount;
-    document.getElementById('exp-notes').value = e.notes || '';
-    document.getElementById('exp-date').value = e.date || '';
+    document.getElementById('exp-notes').value  = e.notes || '';
+    document.getElementById('exp-date').value   = e.date  || '';
+    if (e.date) {
+      const parts = e.date.split('/');
+      if (parts.length===3) {
+        calState.day   = parseInt(parts[0],10);
+        calState.month = parseInt(parts[1],10)-1;
+        calState.year  = parseInt(parts[2],10);
+      }
+    }
     renderPayerSelect(e.payer);
-    renderChips(e.participants);
+    renderChips(e.participants||[]);
   }
+  clearError('payer-error');
+  clearError('chips-error');
 }
+
 function closeModal() {
   document.getElementById('expense-modal').classList.remove('open');
-  document.getElementById('payer-error').style.display = 'none';
-  document.getElementById('chips-error').style.display = 'none';
+  closeCal();
+  clearError('payer-error');
+  clearError('chips-error');
 }
 
+function clearError(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+// ─────────────────────────────────────────────
+//  SELECTOR DE PAGADOR
+// ─────────────────────────────────────────────
 function renderPayerSelect(selected) {
   const sel = document.getElementById('exp-payer');
-  const emptyOpt = selected ? '' : '<option value="" disabled selected>— Selecciona pagador —</option>';
-  sel.innerHTML = emptyOpt + state.people.map(p => `<option value="${p}" ${p===selected?'selected':''}>${p}</option>`).join('');
+  const empty = selected ? '' : '<option value="" disabled selected>— Selecciona pagador —</option>';
+  sel.innerHTML = empty + (state.people||[]).map(p =>
+    `<option value="${p}" ${p===selected?'selected':''}>${p}</option>`
+  ).join('');
 }
 
+// ─────────────────────────────────────────────
+//  CHIPS DE PARTICIPANTES
+// ─────────────────────────────────────────────
 function renderChips(selected) {
-  const grid = document.getElementById('people-chips');
-  grid.innerHTML = state.people.map(p => `
-    <div class="person-chip ${selected.includes(p)?'selected':''}" onclick="toggleChip(this,'${p}')">${p}</div>
-  `).join('');
+  document.getElementById('people-chips').innerHTML = (state.people||[]).map(p =>
+    `<div class="person-chip ${selected.includes(p)?'selected':''}"
+          onclick="toggleChip(this)">${p}</div>`
+  ).join('');
 }
 
-function toggleChip(el, name) {
+function toggleChip(el) {
   el.classList.toggle('selected');
-  if (document.querySelectorAll('#people-chips .person-chip.selected').length > 0) {
-    document.getElementById('chips-error').style.display = 'none';
-  }
+  if (document.querySelectorAll('#people-chips .person-chip.selected').length > 0)
+    clearError('chips-error');
 }
 
 function selectAllChips() {
   document.querySelectorAll('#people-chips .person-chip').forEach(c => c.classList.add('selected'));
-  document.getElementById('chips-error').style.display = 'none';
+  clearError('chips-error');
 }
 function selectNoneChips() {
   document.querySelectorAll('#people-chips .person-chip').forEach(c => c.classList.remove('selected'));
 }
 
 function getSelectedPeople() {
-  return [...document.querySelectorAll('#people-chips .person-chip.selected')].map(c=>c.textContent);
+  return [...document.querySelectorAll('#people-chips .person-chip.selected')].map(c => c.textContent);
 }
 
+// ─────────────────────────────────────────────
+//  GUARDAR GASTO
+// ─────────────────────────────────────────────
 function saveExpense() {
-  const desc = document.getElementById('exp-desc').value.trim();
+  const desc  = document.getElementById('exp-desc').value.trim();
   const amount = parseFloat(document.getElementById('exp-amount').value);
-  const payer = document.getElementById('exp-payer').value;
-  const date = document.getElementById('exp-date').value.trim();
-  const notes = document.getElementById('exp-notes').value.trim();
+  const payer  = document.getElementById('exp-payer').value;
+  const date   = document.getElementById('exp-date').value.trim();
+  const notes  = document.getElementById('exp-notes').value.trim();
   const participants = getSelectedPeople();
   let valid = true;
-  if (!desc) { alert('Indica una descripción del gasto'); return; }
-  if (!amount || amount <= 0) { alert('Indica un importe válido'); return; }
+  if (!desc)              { alert('Indica una descripción del gasto'); return; }
+  if (!amount || amount<=0){ alert('Indica un importe válido'); return; }
   if (!payer) {
     document.getElementById('payer-error').style.display = 'block';
     document.getElementById('exp-payer').focus();
     valid = false;
-  } else {
-    document.getElementById('payer-error').style.display = 'none';
   }
   if (participants.length === 0) {
     document.getElementById('chips-error').style.display = 'block';
     valid = false;
-  } else {
-    document.getElementById('chips-error').style.display = 'none';
   }
   if (!valid) return;
   const expense = { desc, amount, payer, date, notes, participants, id: Date.now() };
   const idx = parseInt(document.getElementById('edit-index').value);
+  if (!state.expenses) state.expenses = [];
   if (idx >= 0) state.expenses[idx] = expense;
   else state.expenses.push(expense);
   save();
   closeModal();
   renderExpenses();
-  document.getElementById('trip-subtitle').textContent = state.people.length + ' viajeros · ' + state.expenses.length + ' gastos';
+  document.getElementById('trip-subtitle').textContent =
+    state.people.length + ' viajeros · ' + state.expenses.length + ' gastos';
 }
 
 function deleteExpense(idx) {
   if (!confirm('¿Eliminar este gasto?')) return;
   state.expenses.splice(idx, 1);
-  save();
-  renderExpenses();
+  save(); renderExpenses();
 }
 
+// ─────────────────────────────────────────────
+//  RENDER LISTA DE GASTOS
+// ─────────────────────────────────────────────
 function renderExpenses() {
   const list = document.getElementById('expenses-list');
-  if (state.expenses.length === 0) {
-    list.innerHTML = '<div class="empty"><div class="empty-icon">🧾</div><p>No hay gastos todavía.<br>Toca "+ Añadir gasto" para empezar.</p></div>';
+  const expenses = state.expenses || [];
+  if (expenses.length === 0) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">&#129534;</div>' +
+      '<p>No hay gastos todavía.<br>Toca &ldquo;+ Añadir gasto&rdquo; para empezar.</p></div>';
     return;
   }
-  const total = state.expenses.reduce((s,e)=>s+e.amount,0);
-  list.innerHTML = `<div class="counter">${state.expenses.length} gastos · Total: ${fmt(total)}</div>` +
+  const total = expenses.reduce((s,e) => s + (e.amount||0), 0);
+  list.innerHTML =
+    `<div class="counter">${expenses.length} gastos &middot; Total: ${fmt(total)}</div>` +
     '<div class="card">' +
-    state.expenses.map((e,i) => `
+    expenses.map((e,i) => `
       <div class="expense-item">
         <div class="exp-header">
           <div class="exp-desc">${e.desc}</div>
           <div class="exp-amount">${fmt(e.amount)}</div>
         </div>
-        <div class="exp-meta">Pagado por <strong>${e.payer}</strong>${e.date ? ' · '+e.date : ''}</div>
-        <div class="exp-people">${e.participants.map(p=>`<span class="tag">${p}</span>`).join('')}</div>
-        ${e.notes ? `<div style="font-size:12px;color:#aaa;margin-top:4px">${e.notes}</div>` : ''}
+        <div class="exp-meta">Pagado por <strong>${e.payer}</strong>${e.date?' &middot; '+e.date:''}</div>
+        <div class="exp-people">${(e.participants||[]).map(p=>`<span class="tag">${p}</span>`).join('')}</div>
+        ${e.notes?`<div style="font-size:12px;color:#aaa;margin-top:4px">${e.notes}</div>`:''}
         <div class="exp-actions">
           <button class="btn-secondary" onclick="openModal('edit',${i})">Editar</button>
           <button class="btn-danger" onclick="deleteExpense(${i})">Eliminar</button>
         </div>
-      </div>
-    `).join('') + '</div>';
+      </div>`
+    ).join('') + '</div>';
 }
 
-function fmt(n) { return n.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €'; }
+function fmt(n) {
+  return (n||0).toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
+}
 
+// ─────────────────────────────────────────────
+//  CÁLCULO BALANCES Y LIQUIDACIÓN
+// ─────────────────────────────────────────────
 function calcBalances() {
   const paid = {}, owed = {};
-  state.people.forEach(p => { paid[p] = 0; owed[p] = 0; });
-  state.expenses.forEach(e => {
-    const share = e.amount / e.participants.length;
+  (state.people||[]).forEach(p => { paid[p]=0; owed[p]=0; });
+  (state.expenses||[]).forEach(e => {
+    const n = (e.participants||[]).length;
+    if (!n) return;
+    const share = e.amount / n;
     paid[e.payer] = (paid[e.payer]||0) + e.amount;
     e.participants.forEach(p => { owed[p] = (owed[p]||0) + share; });
   });
   const balances = {};
-  state.people.forEach(p => { balances[p] = (paid[p]||0) - (owed[p]||0); });
+  (state.people||[]).forEach(p => { balances[p] = (paid[p]||0) - (owed[p]||0); });
   return balances;
 }
 
@@ -412,8 +513,7 @@ function minCashFlow(balances) {
     if (b < -0.005) debtors.push({name:p, amt:-b});
     else if (b > 0.005) creditors.push({name:p, amt:b});
   });
-  const payments = [];
-  let i=0, j=0;
+  const payments = []; let i=0, j=0;
   while (i < debtors.length && j < creditors.length) {
     const d = debtors[i], c = creditors[j];
     const amt = Math.min(d.amt, c.amt);
@@ -428,61 +528,52 @@ function minCashFlow(balances) {
 function renderSummary() {
   const balances = calcBalances();
   const payments = minCashFlow(balances);
-  const total = state.expenses.reduce((s,e)=>s+e.amount,0);
-  const bList = document.getElementById('balance-list');
+  const total = (state.expenses||[]).reduce((s,e)=>s+(e.amount||0),0);
   const entries = Object.entries(balances).sort((a,b)=>b[1]-a[1]);
-  bList.innerHTML = `<div class="summary-row"><span style="color:#aaa">Total gastos</span><span style="font-weight:600">${fmt(total)}</span></div>` +
-    entries.map(([p,b]) => `
-      <div class="summary-row">
-        <span>${p}</span>
-        <span class="${b>0.005?'balance-pos':b<-0.005?'balance-neg':''}">${b>0.005?'+':''}${fmt(b)}</span>
-      </div>
-    `).join('');
+  document.getElementById('balance-list').innerHTML =
+    `<div class="summary-row"><span style="color:#aaa">Total gastos</span><span style="font-weight:600">${fmt(total)}</span></div>` +
+    entries.map(([p,b]) =>
+      `<div class="summary-row"><span>${p}</span>
+       <span class="${b>0.005?'balance-pos':b<-0.005?'balance-neg':''}">${b>0.005?'+':''}${fmt(b)}</span></div>`
+    ).join('');
   const pList = document.getElementById('payments-list');
-  if (payments.length === 0) {
-    pList.innerHTML = '<p style="color:#aaa;font-size:14px;text-align:center;padding:12px">Nadie debe nada o aún no hay gastos.</p>';
-  } else {
-    pList.innerHTML = payments.map(p => `
-      <div class="payment-item">
-        <strong>${p.from}</strong><span class="payment-arrow">→</span><strong>${p.to}</strong>
-        <span class="payment-amount">${fmt(p.amount)}</span>
-      </div>
-    `).join('');
-  }
+  pList.innerHTML = payments.length === 0
+    ? '<p style="color:#aaa;font-size:14px;text-align:center;padding:12px">Sin pagos pendientes.</p>'
+    : payments.map(p =>
+        `<div class="payment-item">
+           <strong>${p.from}</strong><span class="payment-arrow">&#8594;</span><strong>${p.to}</strong>
+           <span class="payment-amount">${fmt(p.amount)}</span>
+         </div>`
+      ).join('');
 }
 
+// ─────────────────────────────────────────────
+//  EXPORTAR CSV
+// ─────────────────────────────────────────────
 function exportCSV() {
   const rows = [['ID','Fecha','Descripcion','Importe_EUR','Pagador','Participantes','Num_Participantes','Cuota_por_persona','Notas']];
-  state.expenses.forEach((e,i) => {
-    const share = (e.amount / e.participants.length).toFixed(2);
-    rows.push([
-      i+1, e.date||'', '"'+e.desc.replace(/"/g,'""')+'"', e.amount.toFixed(2),
-      e.payer, '"'+e.participants.join(';')+'"', e.participants.length, share, '"'+(e.notes||'').replace(/"/g,'""')+'"'
-    ]);
+  (state.expenses||[]).forEach((e,i) => {
+    const share = (e.amount / (e.participants||[1]).length).toFixed(2);
+    rows.push([i+1, e.date||'', '"'+e.desc.replace(/"/g,'""')+'"', e.amount.toFixed(2),
+      e.payer, '"'+(e.participants||[]).join(';')+'"', (e.participants||[]).length, share,
+      '"'+(e.notes||'').replace(/"/g,'""')+'"']);
   });
-  rows.push([]);
-  rows.push(['--- BALANCES ---']);
-  rows.push(['Persona','Pagado_total','Cuota_imputada','Balance_neto']);
-  const paid = {}, owed = {};
-  state.people.forEach(p => { paid[p]=0; owed[p]=0; });
-  state.expenses.forEach(e => {
+  rows.push([], ['--- BALANCES ---'], ['Persona','Pagado_total','Cuota_imputada','Balance_neto']);
+  const paid={}, owed={};
+  (state.people||[]).forEach(p=>{paid[p]=0;owed[p]=0;});
+  (state.expenses||[]).forEach(e=>{
     paid[e.payer]=(paid[e.payer]||0)+e.amount;
-    const share=e.amount/e.participants.length;
-    e.participants.forEach(p => { owed[p]=(owed[p]||0)+share; });
+    const s=e.amount/(e.participants||[1]).length;
+    (e.participants||[]).forEach(p=>{owed[p]=(owed[p]||0)+s;});
   });
-  state.people.forEach(p => {
-    rows.push([p,(paid[p]||0).toFixed(2),(owed[p]||0).toFixed(2),((paid[p]||0)-(owed[p]||0)).toFixed(2)]);
-  });
-  rows.push([]);
-  rows.push(['--- PAGOS LIQUIDACION ---']);
-  rows.push(['De','A','Importe_EUR']);
-  minCashFlow(calcBalances()).forEach(p => rows.push([p.from,p.to,p.amount.toFixed(2)]));
+  (state.people||[]).forEach(p=>rows.push([p,(paid[p]||0).toFixed(2),(owed[p]||0).toFixed(2),((paid[p]||0)-(owed[p]||0)).toFixed(2)]));
+  rows.push([], ['--- PAGOS LIQUIDACION ---'], ['De','A','Importe_EUR']);
+  minCashFlow(calcBalances()).forEach(p=>rows.push([p.from,p.to,p.amount.toFixed(2)]));
   const csv = rows.map(r=>r.join(',')).join('\n');
-  const bom = '\uFEFF';
-  const blob = new Blob([bom+csv], {type:'text/csv;charset=utf-8;'});
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = state.tripName.replace(/\s+/g,'_')+'_gastos.csv';
+  a.href=url; a.download=state.tripName.replace(/\s+/g,'_')+'_gastos.csv';
   a.click(); URL.revokeObjectURL(url);
 }
 
@@ -492,35 +583,234 @@ function clearAll() {
 }
 
 function loadDemo() {
-  if (state.people.length === 0) {
+  if ((state.people||[]).length === 0) {
     state.people = ['Fernando','Ana','Carlos','Marta','Pedro','Lucia','Jordi','Sofia','Roberto','Laura','Pau','Elena','Toni','Neus'];
     state.tripName = 'Viaje de Ejemplo';
   }
   const p = state.people;
   state.expenses = [
-    {id:1, desc:'Alquiler coche', amount:320, payer:p[0], date:'15/03/2025', participants:[p[0],p[1],p[2],p[3]], notes:'Coche grande 4 plazas'},
-    {id:2, desc:'Cena bienvenida', amount:196, payer:p[1], date:'15/03/2025', participants:state.people, notes:''},
-    {id:3, desc:'Entrada museo', amount:84, payer:p[2], date:'16/03/2025', participants:[p[0],p[1],p[2],p[3],p[4],p[5]], notes:''},
-    {id:4, desc:'Picnic playa', amount:55, payer:p[4], date:'17/03/2025', participants:[p[4],p[5],p[6],p[7],p[8]], notes:'Bebidas y bocadillos'},
-    {id:5, desc:'Hotel noche 1', amount:840, payer:p[0], date:'15/03/2025', participants:state.people, notes:'14 personas'},
-    {id:6, desc:'Gasolina', amount:63, payer:p[3], date:'16/03/2025', participants:[p[0],p[1],p[2],p[3]], notes:''},
+    {id:1,desc:'Alquiler coche',amount:320,payer:p[0],date:'15/03/2025',participants:[p[0],p[1],p[2],p[3]],notes:'Coche grande 4 plazas'},
+    {id:2,desc:'Cena bienvenida',amount:196,payer:p[1],date:'15/03/2025',participants:state.people,notes:''},
+    {id:3,desc:'Entrada museo',amount:84,payer:p[2],date:'16/03/2025',participants:[p[0],p[1],p[2],p[3],p[4],p[5]],notes:''},
+    {id:4,desc:'Picnic playa',amount:55,payer:p[4],date:'17/03/2025',participants:[p[4],p[5],p[6],p[7],p[8]],notes:'Bebidas y bocadillos'},
+    {id:5,desc:'Hotel noche 1',amount:840,payer:p[0],date:'15/03/2025',participants:state.people,notes:'14 personas'},
+    {id:6,desc:'Gasolina',amount:63,payer:p[3],date:'16/03/2025',participants:[p[0],p[1],p[2],p[3]],notes:''},
   ];
   save();
   document.getElementById('trip-title').textContent = state.tripName;
-  document.getElementById('trip-subtitle').textContent = p.length + ' viajeros · ' + state.expenses.length + ' gastos';
+  document.getElementById('trip-subtitle').textContent = p.length+' viajeros · '+state.expenses.length+' gastos';
   showTab('gastos');
 }
 
+// ─────────────────────────────────────────────
+//  CALENDARIO — lógica completa y robusta
+// ─────────────────────────────────────────────
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+               'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS  = ['Lu','Ma','Mi','Ju','Vi','Sá','Do'];
+
+let calState = {
+  open: false,
+  view: 'days',   // 'days' | 'months' | 'years'
+  year: new Date().getFullYear(),
+  month: new Date().getMonth(),
+  day: null
+};
+
+function toggleCal(e) {
+  e.stopPropagation();
+  if (calState.open) { closeCal(); return; }
+  // Leer fecha actual del input para inicializar el calendario
+  const val = document.getElementById('exp-date').value;
+  if (val && /^\d{2}\/\d{2}\/\d{4}$/.test(val)) {
+    const parts = val.split('/');
+    calState.day   = parseInt(parts[0],10);
+    calState.month = parseInt(parts[1],10)-1;
+    calState.year  = parseInt(parts[2],10);
+  } else {
+    const now = new Date();
+    calState.year  = now.getFullYear();
+    calState.month = now.getMonth();
+    calState.day   = null;
+  }
+  calState.view = 'days';
+  calState.open = true;
+  positionCal();
+  renderCal();
+  document.getElementById('cal-popup').classList.add('open');
+}
+
+function positionCal() {
+  const btn  = document.getElementById('cal-toggle-btn');
+  const popup = document.getElementById('cal-popup');
+  const rect  = btn.getBoundingClientRect();
+  const spaceBelow = window.innerHeight - rect.bottom;
+  popup.style.width = '300px';
+  if (spaceBelow >= 320) {
+    popup.style.top  = (rect.bottom + 6) + 'px';
+  } else {
+    popup.style.top  = (rect.top - 320) + 'px';
+  }
+  // Alinear a la derecha del botón, sin salirse de pantalla
+  let left = rect.right - 300;
+  if (left < 8) left = 8;
+  popup.style.left = left + 'px';
+}
+
+function closeCal() {
+  calState.open = false;
+  document.getElementById('cal-popup').classList.remove('open');
+}
+
+function renderCal() {
+  document.getElementById('cal-month-label').textContent =
+    calState.view === 'days'   ? MESES[calState.month] + ' ' + calState.year :
+    calState.view === 'months' ? calState.year :
+    calState.year - 6 + ' – ' + (calState.year + 5);
+
+  const body = document.getElementById('cal-body');
+
+  if (calState.view === 'months') {
+    body.innerHTML = '<div class="cal-month-grid">' +
+      MESES.map((m,i) =>
+        `<div class="cal-month-item ${i===calState.month?'selected':''}"
+              onclick="pickMonth(event,${i})">${m.slice(0,3)}</div>`
+      ).join('') + '</div>';
+    return;
+  }
+
+  if (calState.view === 'years') {
+    const base = calState.year - 6;
+    let html = '<div class="cal-year-grid">';
+    for (let y=base; y<base+12; y++) {
+      html += `<div class="cal-year-item ${y===calState.year?'selected':''}"
+                    onclick="pickYear(event,${y})">${y}</div>`;
+    }
+    body.innerHTML = html + '</div>';
+    return;
+  }
+
+  // Vista días
+  const today = new Date();
+  const firstDay = new Date(calState.year, calState.month, 1).getDay(); // 0=Dom
+  const daysInMonth = new Date(calState.year, calState.month+1, 0).getDate();
+  const daysInPrev  = new Date(calState.year, calState.month, 0).getDate();
+  // Convertir domingo=0 a Lunes=0
+  const startOffset = (firstDay + 6) % 7;
+
+  let html = '<div class="cal-grid">';
+  DIAS.forEach(d => { html += `<div class="cal-dow">${d}</div>`; });
+
+  // Días del mes anterior
+  for (let i=startOffset-1; i>=0; i--) {
+    const d = daysInPrev - i;
+    html += `<div class="cal-day other-month" onclick="pickOtherDay(event,-1,${d})">${d}</div>`;
+  }
+  // Días del mes actual
+  for (let d=1; d<=daysInMonth; d++) {
+    const isToday   = d===today.getDate() && calState.month===today.getMonth() && calState.year===today.getFullYear();
+    const isSelected = d===calState.day;
+    html += `<div class="cal-day ${isToday?'today':''} ${isSelected?'selected':''}"
+                  onclick="pickDay(event,${d})">${d}</div>`;
+  }
+  // Relleno días del mes siguiente
+  const total = startOffset + daysInMonth;
+  const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let d=1; d<=remaining; d++) {
+    html += `<div class="cal-day other-month" onclick="pickOtherDay(event,1,${d})">${d}</div>`;
+  }
+  body.innerHTML = html + '</div>';
+}
+
+function calNav(e, dir) {
+  e.stopPropagation();
+  if (calState.view === 'days') {
+    calState.month += dir;
+    if (calState.month > 11) { calState.month = 0;  calState.year++; }
+    if (calState.month <  0) { calState.month = 11; calState.year--; }
+  } else if (calState.view === 'months') {
+    calState.year += dir;
+  } else {
+    calState.year += dir * 12;
+  }
+  renderCal();
+}
+
+function toggleCalView(e) {
+  e.stopPropagation();
+  calState.view = calState.view === 'days' ? 'months' :
+                  calState.view === 'months' ? 'years' : 'days';
+  renderCal();
+}
+
+function pickDay(e, d) {
+  e.stopPropagation();
+  calState.day = d;
+  setDateInput(d, calState.month+1, calState.year);
+  closeCal();
+}
+
+function pickOtherDay(e, delta, d) {
+  e.stopPropagation();
+  calState.month += delta;
+  if (calState.month > 11) { calState.month = 0;  calState.year++; }
+  if (calState.month <  0) { calState.month = 11; calState.year--; }
+  calState.day = d;
+  setDateInput(d, calState.month+1, calState.year);
+  closeCal();
+}
+
+function pickMonth(e, m) {
+  e.stopPropagation();
+  calState.month = m;
+  calState.view  = 'days';
+  renderCal();
+}
+
+function pickYear(e, y) {
+  e.stopPropagation();
+  calState.year = y;
+  calState.view = 'months';
+  renderCal();
+}
+
+function setDateInput(d, m, y) {
+  document.getElementById('exp-date').value =
+    String(d).padStart(2,'0') + '/' + String(m).padStart(2,'0') + '/' + y;
+}
+
+function onDateTyped(input) {
+  // Auto-insertar barras al teclear
+  let v = input.value.replace(/\D/g,'');
+  if (v.length > 2) v = v.slice(0,2)+'/'+v.slice(2);
+  if (v.length > 5) v = v.slice(0,5)+'/'+v.slice(5,9);
+  input.value = v;
+  // Sincronizar calState si la fecha es completa y válida
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(v)) {
+    const parts = v.split('/');
+    calState.day   = parseInt(parts[0],10);
+    calState.month = parseInt(parts[1],10)-1;
+    calState.year  = parseInt(parts[2],10);
+  }
+}
+
+// Cerrar el calendario si se hace clic fuera
+document.addEventListener('click', function(e) {
+  if (!calState.open) return;
+  const popup  = document.getElementById('cal-popup');
+  const btn    = document.getElementById('cal-toggle-btn');
+  if (!popup.contains(e.target) && e.target !== btn) closeCal();
+});
+
+// Cerrar el modal al hacer clic en el overlay
 document.getElementById('expense-modal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
+// ─────────────────────────────────────────────
+//  ARRANQUE
+// ─────────────────────────────────────────────
 load();
-renderExpenses();
-document.getElementById('trip-title').textContent = state.tripName;
-if (state.people.length > 0) {
-  document.getElementById('trip-subtitle').textContent = state.people.length + ' viajeros · ' + state.expenses.length + ' gastos';
-}
 </script>
 </body>
 </html>
